@@ -1,4 +1,4 @@
-# BuyBye · El precio real
+# bobooapp · El precio real
 
 Prototipo de app para pensar antes de comprar: escribes el precio de algo y te enseña cuánto te cuesta de verdad.
 
