@@ -258,7 +258,7 @@
     <p>Con esto calculamos cuánto te cuesta cada compra en horas y cuánto podría crecer.</p>
 
     <div class="field">
-      <label for="sSalary">Sueldo neto al año</label>
+      <label for="sSalary">Sueldo neto al mes</label>
       <div class="in"><input id="sSalary" type="text" inputmode="decimal"><span class="unit">€</span></div>
     </div>
     <div class="field">
@@ -288,14 +288,14 @@
 <script>
 (() => {
   const DAY = 24 * 60 * 60 * 1000;
-  const defaults = { salary: 3600, hoursWeek: 40, rate: 5, shortcut: '' }; // salary = neto anual
+  const defaults = { salary: 1500, hoursWeek: 40, rate: 5, shortcut: '' }; // salary = neto mensual
 
   // ---------- storage (best-effort) ----------
   const store = {
     get(k, fb) { try { const v = localStorage.getItem(k); return v == null ? fb : JSON.parse(v); } catch { return fb; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
   };
-  let settings = Object.assign({}, defaults, store.get('bb.settings.v2', {}));
+  let settings = Object.assign({}, defaults, store.get('bb.settings.v3', {}));
   let tally = store.get('bb.tally', { money: 0, hours: 0 });
   let cooldown = store.get('bb.cooldown', []);
   let years = store.get('bb.years', 10);
@@ -312,7 +312,7 @@
     else if (dots > 1 || /\.\d{3}$/.test(s)) s = s.replace(/\./g, '');
     const v = parseFloat(s); return isFinite(v) && v >= 0 ? v : NaN;
   };
-  const hourly = () => settings.hoursWeek > 0 ? settings.salary / (52 * settings.hoursWeek) : 0;
+  const hourly = () => settings.hoursWeek > 0 ? settings.salary * 12 / (52 * settings.hoursWeek) : 0; // 12 pagas al año
   const grow = (p, y) => p * Math.pow(1 + settings.rate / 100, y);
   const fmtHours = h => {
     if (h < 1) return `${Math.round(h * 60)} min`;
@@ -456,7 +456,7 @@
   const sSalary = $('sSalary'), sHours = $('sHours'), sRate = $('sRate'), sShortcut = $('sShortcut');
   function updDerived() {
     const sal = parse(sSalary.value), hw = parse(sHours.value);
-    $('sWage').textContent = (isFinite(sal) && hw > 0) ? `${num(sal / (52 * hw), 2)} €` : '—';
+    $('sWage').textContent = (isFinite(sal) && hw > 0) ? `${num(sal * 12 / (52 * hw), 2)} €` : '—';
   }
   [sSalary, sHours].forEach(i => i.addEventListener('input', updDerived));
   $('openSettings').addEventListener('click', () => {
@@ -470,10 +470,10 @@
     if (isFinite(hw) && hw > 0) settings.hoursWeek = hw;
     if (isFinite(r)) settings.rate = r;
     settings.shortcut = sShortcut.value.trim();
-    store.set('bb.settings.v2', settings); render();
+    store.set('bb.settings.v3', settings); render();
   });
   // First visit: open settings so the hours are the user's own.
-  if (!store.get('bb.settings.v2', null)) setTimeout(() => $('openSettings').click(), 400);
+  if (!store.get('bb.settings.v3', null)) setTimeout(() => $('openSettings').click(), 400);
 
   render(); renderTally(); renderCooldown();
 })();
