@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a222c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>BuyBye</title>
+<meta name="apple-mobile-web-app-title" content="BuyBye">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --desk: #d9dde1;
+    --desk-deep: #c7ccd2;
+    --paper: #fbfaf5;
+    --paper-shadow: rgba(20, 30, 40, .28);
+    --ink: #1c2330;
+    --ink-soft: #5b6472;
+    --ink-faint: #a9afb8;
+    --rule: #d8d4c8;
+    --stamp: #c8352c;
+    --grow: #1f6b4a;
+    --grow-soft: #dcebe2;
+    --wait: #b7791f;
+    --wait-soft: #f6ead2;
+    --ui-text: #1c2330;
+    --ui-muted: #5b6472;
+    --ui-surface: #e9ecef;
+    --focus: #2d6cdf;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --desk: #1a222c;
+      --desk-deep: #121820;
+      --paper-shadow: rgba(0, 0, 0, .55);
+      --ui-text: #e7eaee;
+      --ui-muted: #9aa3ae;
+      --ui-surface: #243040;
+    }
+  }
+  :root[data-theme="dark"] {
+    --desk: #1a222c;
+    --desk-deep: #121820;
+    --paper-shadow: rgba(0, 0, 0, .55);
+    --ui-text: #e7eaee;
+    --ui-muted: #9aa3ae;
+    --ui-surface: #243040;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  button, input, a { touch-action: manipulation; }
+  html { -webkit-text-size-adjust: 100%; background: var(--desk-deep); }
+  body {
+    margin: 0;
+    background: radial-gradient(120% 60% at 50% 0, var(--desk) 0%, var(--desk-deep) 100%) no-repeat;
+    color: var(--ui-text);
+    font-family: "Instrument Sans", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+    min-height: 100dvh;
+    padding: calc(12px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
+  }
+  .app { max-width: 420px; margin: 0 auto; }
+
+  .ask-top { display: flex; align-items: center; justify-content: space-between; }
+  .gear {
+    appearance: none; border: 0; background: var(--ui-surface); color: var(--ui-muted);
+    width: 40px; height: 40px; border-radius: 999px; cursor: pointer;
+    display: grid; place-items: center; -webkit-tap-highlight-color: transparent;
+  }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  /* Price input: the hero */
+  .ask { margin-bottom: 18px; }
+  .ask label { display: block; font-size: 17px; font-weight: 500; color: var(--ui-muted); }
+  .price-row { display: flex; align-items: baseline; gap: 8px; }
+  .price-row .cur { font-family: "Courier Prime", monospace; font-size: 40px; color: var(--ui-muted); }
+  #price {
+    appearance: none; border: 0; background: transparent; width: 100%;
+    font-family: "Courier Prime", monospace; font-weight: 700; font-size: 72px; line-height: 1;
+    color: var(--ui-text); padding: 0; min-width: 0;
+    border-bottom: 3px solid var(--ui-muted);
+  }
+  #price::placeholder { color: var(--ui-muted); opacity: .5; }
+  #price:focus { border-bottom-color: var(--stamp); outline: none; }
+
+  /* Receipt */
+  .receipt {
+    position: relative; margin-top: 12px;
+    background: var(--paper); color: var(--ink);
+    font-family: "Courier Prime", monospace; font-size: 15px;
+    padding: 14px 18px 18px;
+    box-shadow: 0 18px 40px -12px var(--paper-shadow);
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .receipt::before, .receipt::after {
+    content: ""; position: absolute; left: 0; right: 0; height: 9px;
+    background: radial-gradient(circle at 9px 0, transparent 7px, var(--paper) 8px) 0 0 / 18px 9px repeat-x;
+  }
+  .receipt::before { top: -9px; transform: rotate(180deg); }
+  .receipt::after { bottom: -9px; }
+  .receipt.empty { opacity: .55; }
+  .receipt.empty .num::after { content: "—"; }
+  .r-line { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; }
+  .r-line .k { color: var(--ink); }
+  .r-line .v { font-weight: 700; white-space: nowrap; text-align: right; }
+  .r-line small { display: block; color: var(--ink-soft); font-size: 12px; font-weight: 400; margin-top: 2px; }
+  .r-rule { border: 0; border-top: 1px dashed var(--rule); margin: 10px 0; }
+  .r-big { display: block; padding: 8px 0 4px; }
+  .r-big .k { display: block; font-size: 14px; }
+  .r-big .k small { display: inline; margin-left: 6px; }
+  .r-big .v { display: block; font-size: 30px; line-height: 1.15; text-align: left; white-space: normal; margin-top: 4px; }
+  .r-big.hours .v { color: var(--ink); }
+  .r-big.grow .v { color: var(--grow); }
+  .r-note { color: var(--ink-soft); font-size: 12px; line-height: 1.4; }
+  .r-line.sum .v { font-size: 20px; }
+
+  /* Years control inside receipt */
+  .years { margin: 10px 0 2px; }
+  .years .lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); }
+  .years input[type=range] { width: 100%; accent-color: var(--grow); margin: 6px 0 0; }
+
+  /* Chart */
+  .chart { margin: 12px 0 6px; }
+  .chart svg { display: block; width: 100%; height: 88px; overflow: visible; }
+  .chart .bar { fill: var(--grow-soft); }
+  .chart .bar.gain { fill: var(--grow); }
+  .chart text { font-family: "Courier Prime", monospace; font-size: 11px; fill: var(--ink-soft); }
+
+  /* Decision */
+  .decide { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+  .decide button {
+    appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 600; font-size: 15px;
+    padding: 14px 10px; border-radius: 12px; color: #fff;
+  }
+  .decide .keep { background: var(--grow); }
+  .decide .wait { background: var(--wait); }
+  .decide .buy { grid-column: 1 / -1; background: transparent; color: var(--ui-muted); padding: 10px; }
+  .decide button:disabled { opacity: .45; cursor: default; }
+
+  /* Tally + cooldown */
+  section.tally { margin-top: 28px; }
+  section h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; color: var(--ui-text); }
+  .tally-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tally-card { background: var(--ui-surface); border-radius: 14px; padding: 14px; }
+  .tally-card .big { font-family: "Courier Prime", monospace; font-weight: 700; font-size: 28px; line-height: 1; }
+  .tally-card .lab { color: var(--ui-muted); font-size: 13px; margin-top: 4px; }
+  .cooldown { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  .cooldown li {
+    background: var(--ui-surface); border-radius: 14px; padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .cooldown .amt { font-family: "Courier Prime", monospace; font-weight: 700; font-size: 20px; }
+  .cooldown .left { color: var(--ui-muted); font-size: 13px; }
+  .cooldown .ready { color: var(--wait); font-weight: 600; }
+  .cooldown .acts { display: flex; gap: 6px; }
+  .cooldown .acts button {
+    appearance: none; border: 0; background: transparent; color: var(--ui-text); font: inherit; font-size: 13px;
+    font-weight: 600; padding: 6px 8px; border-radius: 8px; cursor: pointer;
+  }
+  .cooldown .acts .keep { color: var(--grow); }
+  .empty-note { color: var(--ui-muted); font-size: 14px; }
+
+  /* Settings sheet */
+  dialog {
+    border: 0; border-radius: 20px 20px 0 0; padding: 0; width: 100%; max-width: 480px;
+    margin: auto auto 0; background: var(--desk); color: var(--ui-text);
+  }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  .sheet { padding: 20px 20px calc(24px + env(safe-area-inset-bottom)); }
+  .sheet h2 { margin: 0 0 4px; font-size: 20px; }
+  .sheet p { margin: 0 0 18px; color: var(--ui-muted); font-size: 14px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .field .in { display: flex; align-items: center; gap: 8px; background: var(--ui-surface); border-radius: 12px; padding: 0 14px; }
+  .field input { appearance: none; border: 0; background: transparent; width: 100%; font: inherit; font-size: 18px; padding: 12px 0; color: var(--ui-text); min-width: 0; }
+  .field input:focus { outline: none; }
+  .field .unit { color: var(--ui-muted); white-space: nowrap; }
+  .field .help { color: var(--ui-muted); font-size: 12px; margin-top: 4px; }
+  .sheet .row { display: flex; gap: 10px; margin-top: 8px; }
+  .sheet .row button { flex: 1; appearance: none; border: 0; font: inherit; font-weight: 600; padding: 14px; border-radius: 12px; cursor: pointer; }
+  .sheet .save { background: var(--ui-text); color: var(--desk); }
+  .sheet .cancel { background: var(--ui-surface); color: var(--ui-text); }
+  .derived { font-family: "Courier Prime", monospace; font-weight: 700; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="ask">
+    <div class="ask-top">
+      <label for="price">¿Cuánto cuesta?</label>
+      <button class="gear" id="openSettings" type="button" aria-label="Ajustes">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+    <div class="price-row">
+      <span class="cur">€</span>
+      <input id="price" type="text" inputmode="decimal" placeholder="0" autocomplete="off" enterkeyhint="done">
+    </div>
+  </div>
+
+  <article class="receipt empty" id="receipt" aria-live="polite">
+    <div class="r-line"><span class="k">Precio en la etiqueta</span><span class="v num" id="rPrice"></span></div>
+    <hr class="r-rule">
+
+    <div class="r-line r-big hours">
+      <span class="k">Horas de tu vida<small id="rWage"></small></span>
+      <span class="v num" id="rHours"></span>
+    </div>
+    <hr class="r-rule">
+
+    <div class="r-line r-big grow">
+      <span class="k">Si lo inviertes<small id="rGrowSub"></small></span>
+      <span class="v num" id="rGrow"></span>
+    </div>
+    <div class="years">
+      <div class="lbl"><span>1 año</span><span id="yearsLbl">10 años</span><span>40 años</span></div>
+      <input type="range" id="years" min="1" max="40" value="10" aria-label="Años invertido">
+    </div>
+    <div class="chart" id="chart" aria-hidden="true"></div>
+    <hr class="r-rule">
+
+    <div class="r-line sum"><span class="k">Coste de oportunidad</span><span class="v num" id="rCost"></span></div>
+    <p class="r-note">Lo que dejas de tener en <span id="rCostYears">10 años</span>. Simulación al <span id="rRate">5 %</span> anual, no una promesa.</p>
+  </article>
+
+  <div class="decide">
+    <button class="keep" id="btnKeep" type="button" disabled>Me lo ahorro</button>
+    <button class="wait" id="btnWait" type="button" disabled>Lo pienso 24 h</button>
+    <button class="buy" id="btnBuy" type="button" disabled>Lo compro igualmente</button>
+  </div>
+
+  <section class="tally">
+    <h2>Lo que has ganado al no comprar</h2>
+    <div class="tally-grid">
+      <div class="tally-card"><div class="big" id="tMoney">0 €</div><div class="lab">ahorrados</div></div>
+      <div class="tally-card"><div class="big" id="tHours">0 h</div><div class="lab">de vida recuperadas</div></div>
+    </div>
+  </section>
+
+  <section class="tally">
+    <h2>En la nevera</h2>
+    <ul class="cooldown" id="cooldown"></ul>
+    <p class="empty-note" id="cooldownEmpty">Nada pendiente. Cuando dudes, dale a «Lo pienso 24 h» y decide con la cabeza fría.</p>
+  </section>
+</div>
+
+<dialog id="settings">
+  <form class="sheet" method="dialog" id="settingsForm">
+    <h2>Tus números</h2>
+    <p>Con esto calculamos cuánto te cuesta cada compra en horas y cuánto podría crecer.</p>
+
+    <div class="field">
+      <label for="sSalary">Sueldo neto al año</label>
+      <div class="in"><input id="sSalary" type="text" inputmode="decimal"><span class="unit">€</span></div>
+    </div>
+    <div class="field">
+      <label for="sHours">Horas que trabajas a la semana</label>
+      <div class="in"><input id="sHours" type="text" inputmode="decimal"><span class="unit">h</span></div>
+      <div class="help">Sale a <span class="derived" id="sWage">—</span> netos la hora.</div>
+    </div>
+    <div class="field">
+      <label for="sRate">Rentabilidad anual esperada</label>
+      <div class="in"><input id="sRate" type="text" inputmode="decimal"><span class="unit">%</span></div>
+      <div class="help">Un fondo indexado global ha dado históricamente en torno al 7 % anual. Nadie garantiza que se repita.</div>
+    </div>
+
+    <div class="field">
+      <label for="sShortcut">Atajo para recordatorios (opcional)</label>
+      <div class="in"><input id="sShortcut" type="text" autocapitalize="none" placeholder="Nombre exacto del atajo"></div>
+      <div class="help">Si lo rellenas, «Lo pienso 24 h» ejecuta ese atajo de iPhone pasándole el texto del recordatorio. Si no, intenta crear un evento de calendario.</div>
+    </div>
+
+    <div class="row">
+      <button type="button" class="cancel" id="sCancel">Cancelar</button>
+      <button type="submit" class="save">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(() => {
+  const DAY = 24 * 60 * 60 * 1000;
+  const defaults = { salary: 3600, hoursWeek: 40, rate: 5, shortcut: '' }; // salary = neto anual
+
+  // ---------- storage (best-effort) ----------
+  const store = {
+    get(k, fb) { try { const v = localStorage.getItem(k); return v == null ? fb : JSON.parse(v); } catch { return fb; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+  let settings = Object.assign({}, defaults, store.get('bb.settings.v2', {}));
+  let tally = store.get('bb.tally', { money: 0, hours: 0 });
+  let cooldown = store.get('bb.cooldown', []);
+  let years = store.get('bb.years', 10);
+
+  // ---------- helpers ----------
+  const $ = id => document.getElementById(id);
+  const eur = n => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: n >= 1000 ? 0 : 2 }).format(n);
+  const num = (n, d = 1) => new Intl.NumberFormat('es-ES', { maximumFractionDigits: d }).format(n);
+  // Accepts "1.200,50", "1200,50", "12.5" and "12,5".
+  const parse = s => {
+    s = String(s).trim();
+    const dots = (s.match(/\./g) || []).length;
+    if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+    else if (dots > 1 || /\.\d{3}$/.test(s)) s = s.replace(/\./g, '');
+    const v = parseFloat(s); return isFinite(v) && v >= 0 ? v : NaN;
+  };
+  const hourly = () => settings.hoursWeek > 0 ? settings.salary / (52 * settings.hoursWeek) : 0;
+  const grow = (p, y) => p * Math.pow(1 + settings.rate / 100, y);
+  const fmtHours = h => {
+    if (h < 1) return `${Math.round(h * 60)} min`;
+    if (h < 8) { const m = Math.round((h % 1) * 60); return m ? `${Math.floor(h)} h ${m} min` : `${Math.floor(h)} h`; }
+    const days = h / 8;
+    if (days < 22) return `${num(days, 1)} días de curro`;
+    return `${num(days / 22, 1)} meses de curro`;
+  };
+
+  // ---------- receipt ----------
+  const priceEl = $('price');
+  const receipt = $('receipt');
+  let price = NaN;
+
+  function render() {
+    const ok = isFinite(price) && price > 0;
+    receipt.classList.toggle('empty', !ok);
+    ['btnKeep', 'btnWait', 'btnBuy'].forEach(id => $(id).disabled = !ok);
+    $('rWage').textContent = `a ${num(hourly(), 2)} €/h netos`;
+    $('rGrowSub').textContent = `en ${years} ${years === 1 ? 'año' : 'años'} al ${num(settings.rate, 1)} %`;
+    $('yearsLbl').textContent = `${years} ${years === 1 ? 'año' : 'años'}`;
+    $('rCostYears').textContent = `${years} ${years === 1 ? 'año' : 'años'}`;
+    $('rRate').textContent = `${num(settings.rate, 1)} %`;
+    if (!ok) {
+      ['rPrice', 'rHours', 'rGrow', 'rCost'].forEach(id => $(id).textContent = '');
+      $('chart').innerHTML = '';
+      return;
+    }
+    const h = hourly();
+    $('rPrice').textContent = eur(price);
+    $('rHours').textContent = h > 0 ? fmtHours(price / h) : '—';
+    $('rGrow').textContent = eur(grow(price, years));
+    $('rCost').textContent = eur(grow(price, years) - price);
+    drawChart();
+  }
+
+  function drawChart() {
+    const steps = Math.min(years, 10);
+    const pts = [];
+    for (let i = 0; i <= steps; i++) {
+      const y = Math.round(i * years / steps);
+      pts.push({ y, v: grow(price, y) });
+    }
+    const max = pts[pts.length - 1].v;
+    const W = 360, H = 70, gap = 4, bw = (W - gap * (pts.length - 1)) / pts.length;
+    let s = `<svg viewBox="0 0 ${W} ${H + 16}" preserveAspectRatio="none">`;
+    pts.forEach((p, i) => {
+      const x = i * (bw + gap);
+      const hb = (price / max) * H, hg = (p.v / max) * H;
+      s += `<rect class="bar gain" x="${x}" y="${H - hg}" width="${bw}" height="${hg}" rx="2"/>`;
+      s += `<rect class="bar" x="${x}" y="${H - hb}" width="${bw}" height="${hb}" rx="2"/>`;
+      if (i === 0 || i === pts.length - 1 || (pts.length > 6 && i === Math.floor(pts.length / 2)))
+        s += `<text x="${x + bw / 2}" y="${H + 13}" text-anchor="middle">${p.y}a</text>`;
+    });
+    s += '</svg>';
+    $('chart').innerHTML = s;
+  }
+
+  priceEl.addEventListener('input', () => { price = parse(priceEl.value); render(); });
+  priceEl.addEventListener('keydown', e => { if (e.key === 'Enter') priceEl.blur(); });
+  $('years').value = years;
+  $('years').addEventListener('input', e => { years = +e.target.value; store.set('bb.years', years); render(); });
+
+  // ---------- decisions ----------
+  function reset() { priceEl.value = ''; price = NaN; render(); }
+  function addSaved(p) {
+    tally.money += p; tally.hours += hourly() > 0 ? p / hourly() : 0;
+    store.set('bb.tally', tally); renderTally();
+  }
+  $('btnKeep').addEventListener('click', () => { addSaved(price); reset(); });
+  $('btnBuy').addEventListener('click', reset);
+  $('btnWait').addEventListener('click', () => {
+    const item = { id: Date.now(), price, until: Date.now() + DAY };
+    cooldown.unshift(item);
+    store.set('bb.cooldown', cooldown); renderCooldown();
+    calendarReminder(item); reset();
+  });
+
+  // Safari can't create Reminders directly. Two routes:
+  //  1. A Shortcut (configured in settings) that receives the text and creates the reminder.
+  //  2. Otherwise an .ics event with an alarm: iOS opens it and offers "Añadir al calendario".
+  //     (Not possible when hosted inside the claude.ai viewer, which blocks page downloads.)
+  function calendarReminder(item) {
+    const title = `¿Sigues queriendo eso de ${eur(item.price)}?`;
+    const body = `Te cuesta ${fmtHours(hourly() > 0 ? item.price / hourly() : 0)}. Invertido ${years} años serían ${eur(grow(item.price, years))}.`;
+    if (settings.shortcut) {
+      const url = `shortcuts://run-shortcut?name=${encodeURIComponent(settings.shortcut)}&input=text&text=${encodeURIComponent(title + ' ' + body)}`;
+      try { if (!window.open(url, '_blank')) location.href = url; } catch { location.href = url; }
+      return;
+    }
+    if (window.claude && typeof window.claude.use === 'function') return;
+    const ics = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const start = new Date(item.until), end = new Date(item.until + 15 * 60000);
+    const txt = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//BuyBye//ES', 'BEGIN:VEVENT',
+      `UID:buybye-${item.id}@local`, `DTSTAMP:${ics(new Date())}`, `DTSTART:${ics(start)}`, `DTEND:${ics(end)}`,
+      `SUMMARY:${title}`, `DESCRIPTION:${body}`,
+      'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${title}`, 'TRIGGER:PT0M', 'END:VALARM',
+      'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([txt], { type: 'text/calendar;charset=utf-8' }));
+    a.download = 'recordatorio-buybye.ics';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  }
+
+  function renderTally() {
+    $('tMoney').textContent = eur(tally.money);
+    $('tHours').textContent = tally.hours < 1 ? `${Math.round(tally.hours * 60)} min` : `${num(tally.hours, 1)} h`;
+  }
+
+  function renderCooldown() {
+    const ul = $('cooldown');
+    ul.innerHTML = '';
+    $('cooldownEmpty').hidden = cooldown.length > 0;
+    const now = Date.now();
+    cooldown.forEach(item => {
+      const li = document.createElement('li');
+      const left = item.until - now;
+      let status;
+      if (left <= 0) status = '<span class="left ready">Ya puedes decidir</span>';
+      else {
+        const hrs = Math.floor(left / 3600000), min = Math.floor((left % 3600000) / 60000);
+        status = `<span class="left">${hrs > 0 ? hrs + ' h ' : ''}${min} min para decidir</span>`;
+      }
+      li.innerHTML = `<div><div class="amt">${eur(item.price)}</div>${status}</div>
+        <div class="acts"><button type="button" class="keep" data-act="keep" data-id="${item.id}">Me lo ahorro</button><button type="button" data-act="buy" data-id="${item.id}">Lo compro</button></div>`;
+      ul.appendChild(li);
+    });
+  }
+  $('cooldown').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const id = +b.dataset.id, item = cooldown.find(i => i.id === id); if (!item) return;
+    if (b.dataset.act === 'keep') addSaved(item.price);
+    cooldown = cooldown.filter(i => i.id !== id);
+    store.set('bb.cooldown', cooldown); renderCooldown();
+  });
+  setInterval(renderCooldown, 60000);
+
+  // ---------- settings ----------
+  const dlg = $('settings');
+  const sSalary = $('sSalary'), sHours = $('sHours'), sRate = $('sRate'), sShortcut = $('sShortcut');
+  function updDerived() {
+    const sal = parse(sSalary.value), hw = parse(sHours.value);
+    $('sWage').textContent = (isFinite(sal) && hw > 0) ? `${num(sal / (52 * hw), 2)} €` : '—';
+  }
+  [sSalary, sHours].forEach(i => i.addEventListener('input', updDerived));
+  $('openSettings').addEventListener('click', () => {
+    sSalary.value = num(settings.salary, 2); sHours.value = num(settings.hoursWeek, 1); sRate.value = num(settings.rate, 2); sShortcut.value = settings.shortcut || '';
+    updDerived(); dlg.showModal();
+  });
+  $('sCancel').addEventListener('click', () => dlg.close());
+  $('settingsForm').addEventListener('submit', () => {
+    const sal = parse(sSalary.value), hw = parse(sHours.value), r = parse(sRate.value);
+    if (isFinite(sal)) settings.salary = sal;
+    if (isFinite(hw) && hw > 0) settings.hoursWeek = hw;
+    if (isFinite(r)) settings.rate = r;
+    settings.shortcut = sShortcut.value.trim();
+    store.set('bb.settings.v2', settings); render();
+  });
+  // First visit: open settings so the hours are the user's own.
+  if (!store.get('bb.settings.v2', null)) setTimeout(() => $('openSettings').click(), 400);
+
+  render(); renderTally(); renderCooldown();
+})();
+</script>
+</body>
+</html>
